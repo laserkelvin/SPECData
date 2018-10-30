@@ -43,6 +43,8 @@
 
 from molecules_table import mid_exists
 
+import numpy as np
+
 ###############################################################################
 # Get Peaks Table Information
 # -----------------------------------------------------------------------------
@@ -490,18 +492,14 @@ def __import_dptfile(conn, filepath, mid):
     """
     from analysis import peak_finder
 
-    # Get data from file
-    frequencies = []
-    intensities = []
-    with open(filepath) as f:
-        for line in f:
-            point = line.split(",")
-            frequencies.append(float(point[0]))   # get frequency
-            intensities.append(float(point[1]))   # get actual intensity (logx ^ x)
+    # Get data from file as numpy arrays
+    data = np.loadtxt(filepath)
+    frequencies = data[:,0]
+    intensities = data[:,1]
 
-    print "[Data Points collected: " + str(len(frequencies)) + "]"
+    print("[Data Points collected: " + str(len(frequencies)) + "]")
     # Determine Peaks
-    frequencies, intensities = peak_finder.peak_finder(frequencies, intensities, 0.2)
+    frequencies, intensities = peak_finder.peak_finder(frequencies, intensities)
 
     print "[Peaks found: " + str(len(frequencies)) + "]"
     # Store peaks into file
@@ -526,34 +524,28 @@ def __import_txtfile(conn, filepath, mid, peaks=False):
     import re
 
     delimiters = [" ", "\t", ",", ", "]
-    regex = '|'.join((map(re.escape, delimiters)))
-
-    # Get data from file
-    frequencies = []
-    intensities = []
-    line_num = 0
     with open(filepath) as f:
-        for line in f:
-            line_num += 1
-            if line is not None or line is not "":
-                try:
-                    point = re.split(regex, line.strip())
+        data_string = f.read()
+        for delimiter in delimiters:
+            # Replace all types of delimiters into comma
+            # separated
+            data_string = data_string.replace(delimiter, ",")
+    with open(filepath + ".csv", "w+") as f:
+        f.write(data_string)
+    # Load in data as numpy array and skip the first line
+    data = np.loadtxt(filepath + ".csv", dtype=float, skiprows=1, delimiter=",")
 
-                    frequencies.append(float(point[0]))  # get frequency
-                    intensities.append(float(point[1]))  # get actual intensity (logx ^ x)
-                except IndexError:
-                    print "IndexError in line: " + str(line_num)
-                except ValueError:
-                    print "ValueError in Line: " + str(line_num)
+    frequencies = data[:,0]
+    intensities = data[:,1]
 
-        if peaks is False:
-            # Determine Peaks
-            frequencies, intensities = peak_finder.peak_finder(frequencies, intensities, 0.2)
+    if peaks is False:
+        # Determine Peaks
+        frequencies, intensities = peak_finder.peak_finder(frequencies, intensities)
 
     # Store peaks into file
-    for i in range(0, len(frequencies)):
+    for frequency, intensity in zip(frequencies, intensities):
         conn.execute('INSERT INTO peaks(mid, frequency, intensity) VALUES (?,?,?)',
-                     (mid, frequencies[i], intensities[i]))  # insert into peak table
+                     (mid, frequency, intensity))  # insert into peak table
 
     # Commit Changes
     conn.commit()
