@@ -1,11 +1,13 @@
 # Author: Marie-Aline Martin
 # Author: Jasmine Oliveira
 # Author: Kyle Crabtree
-# Date: 06/16/16
+# Author: Kelvin Lee
+# Date: 10/30/18
 
 from math import ceil
 
 import numpy as np
+import peakutils
 from scipy.signal import savgol_filter
 
 
@@ -22,7 +24,19 @@ def smooth(s_list, n):
     return s_smooth
 
 
-def peak_finder(s_freq_list, s_int_list, s_autoclean):
+def peak_finder(s_freq_list, s_int_list, thres=0.3):
+    """ Revised peak finding function.
+        Wraps the peakutils functions for our purposes.
+    """
+    # Call peakutils function to get indexes of peaks
+    indexes = peakutils.indexes(s_int_list, thres=thres)
+    # Slice arrays
+    frequencies = s_freq_list[indexes]
+    intensities = s_int_list[indexes]
+    return frequencies, intensities
+
+
+def old_peak_finder(s_freq_list, s_int_list, s_autoclean):
     """
      Finds Peaks in 2D data
         (1) Finds and Removes Noise level

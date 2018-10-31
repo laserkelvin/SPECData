@@ -50,24 +50,27 @@ class SplatalogueAnalysis:
         pids = self.experiment.get_unvalidated_pids_list()
         frequencies, intensities = self.experiment.get_unvalidated_experiment_intensities_list()  # peaks_table.get_frequency_intensity_list(conn, mid)
 
-        for i in range(0, len(frequencies)):
-
-            ''' Query for Matches '''
-            try:
-                lines = self.query(frequencies[i] - threshold, frequencies[i] + threshold)
-            except ConnectionError:
-                print "Connection refused by the server. (i=" + str(i) + ") Waiting to request.."
-                sleep(5)
-                i -= 1
-                print "I'm awake! Trying again!"
-                continue
+        # loop over all the unvalidated frequencies
+        for freq_index, frequency in enumerate(frequencies):
+            success = False
+            while success is False: 
+                try:
+                    df = self.query(frequency - threshold, frequency + threshold)
+                except ConnectionError:
+                    print("Connection refused by the server. Waiting to retry..")
+                    sleep(5)
+                    continue
+                success = True
 
             added = []
-            for row in lines:
-
+            for index, row in df.iterrows(): 
                 # Get row data
-
-                name, full_name, freq, intensity, line_list = self.get_row_data(row)
+                name = row["Species"]
+                full_name = row["Chemical Name"]
+                freq = row["Meas Freq-GHz(rest frame,redshifted)"]
+                intensity = row["CDMS/JPL Intensity"]
+                line_list = row["Linelist"]
+                #name, full_name, freq, intensity, line_list = self.get_row_data(row)
 
                 # If line already matched to chemical, skip
                 if name in added:
@@ -83,7 +86,7 @@ class SplatalogueAnalysis:
 
                 # Add Line to corresponding chemical
                 # self.chemicals[name].add_line(line, frequencies[i])
-                self.chemicals[name].add_line(line, pids[i])
+                self.chemicals[name].add_line(line, pids[freq_index])
 
                 added.append(name)  # add to 'added', to keep track of matches on this frequency
 
@@ -150,22 +153,39 @@ class SplatalogueAnalysis:
 
     @staticmethod
     def query(low_freq, high_freq, chemical_name=None, line_list=[LineList.JPL, LineList.CDMS]):
+        """ Class method for querying splatalogue.
 
-        columns = ('Species', 'Chemical Name', 'Freq-GHz', 'Meas Freq-GHz', 'CDMS/JPL Intensity', 'Lovas/AST Intensity',
-                   'Linelist')
+            Wraps the query_lines function from astroquery.
+        """
+
+        columns = [
+                'Species',
+                'Chemical Name',
+                'Freq-GHz(rest frame,redshifted)',
+                'Meas Freq-GHz(rest frame,redshifted)',
+                'CDMS/JPL Intensity',
+                'Lovas/AST Intensity',
+                'Linelist']
 
         try:
             # TODO-Dynamic Frequency Units
-            if chemical_name is not None:
-                lines = Splatalogue.query_lines(low_freq * u.MHz, high_freq * u.MHz,
-                                                chemical_name=chemical_name)[columns]
+            # Query splatalogue and convert into pandas dataframes
+            if chemical_name:
+                df = Splatalogue.query_lines(
+                        low_freq * u.MHz,
+                        high_freq * u.MHz,
+                        chemical_name=chemical_name).to_pandas()
             else:
-                lines = Splatalogue.query_lines(low_freq * u.MHz, high_freq * u.MHz,
-                                                line_lists=line_list)[columns]
+                df = Splatalogue.query_lines(
+                        low_freq * u.MHz,
+                        high_freq * u.MHz,
+                        line_lists=line_list).to_pandas()
+            df = df[columns]
+
         except TimeoutError:
             return []
 
-        return lines
+        return df 
 
     @staticmethod
     def get_row_data(row):
