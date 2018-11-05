@@ -30,10 +30,16 @@ class ExperimentInfoWidget(QWidget):
         """
         mid = experiment.mid
         name = experiment.name
-        composition = info_table.get_composition(conn, mid)
-        notes = info_table.get_notes(conn, mid)
-        units = info_table.get_units(conn, mid)
-        type = info_table.get_type(conn, mid)
+        try:
+            composition = info_table.get_composition(conn, mid)
+            notes = info_table.get_notes(conn, mid)
+            units = info_table.get_units(conn, mid)
+            line_type = info_table.get_type(conn, mid)
+        except:
+            composition = "N/A"
+            notes = "N/A"
+            units = "N/A"
+            line_type = "N/A"
 
         total_peaks = peaks_table.get_peak_count(conn, mid)
         assigned = experiment.get_assigned_peaks_count()
@@ -51,7 +57,7 @@ class ExperimentInfoWidget(QWidget):
         self.ui.composition_val.setText(composition)
         self.ui.notes_val.setText(notes)
         self.ui.units_val.setText(units)
-        self.ui.type_val.setText(type)
+        self.ui.type_val.setText(line_type)
 
         self.ui.total_peaks_val.setText(str(total_peaks))
 
