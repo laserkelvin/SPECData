@@ -458,7 +458,8 @@ def import_file(conn, filepath, mid, peaks=False):
         return False
 
     # Get File extention
-    extention = str.split(filepath, ".")[1]
+    extention = str.split(filepath, ".")[-1]
+    print(extention)
 
     # Match extention to its appropriate import function
     if extention == 'cat':

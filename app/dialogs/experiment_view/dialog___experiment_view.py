@@ -583,6 +583,8 @@ class ExperimentView(QMainWindow):
         self.loading_screen.next_value(60)
 
         ''' Setup Splatalogue Dock Widget '''
+        self.loading_screen.set_caption("Querying Splatalogue...")
+        self.loading_screen.next_value(70)
         self.splatalogue_dock_widget.__setup__()  # Note: Setup here, to stop pop-up windows in load
 
         '''Add Assignments to Selection Widget'''

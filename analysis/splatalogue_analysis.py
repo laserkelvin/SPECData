@@ -246,8 +246,14 @@ class Chemical:
         self.N += 1
 
     def get_all_lines(self, min_freq, max_freq, line_list=[LineList.JPL, LineList.CDMS]):
-        columns = ('Species', 'Chemical Name', 'Freq-GHz', 'Meas Freq-GHz',
-                   'CDMS/JPL Intensity', 'Lovas/AST Intensity', 'Linelist')
+        columns = [
+                'Species',
+                'Chemical Name',
+                'Freq-GHz(rest frame,redshifted)',
+                'Meas Freq-GHz(rest frame,redshifted)',
+                'CDMS/JPL Intensity',
+                'Lovas/AST Intensity',
+                'Linelist']
 
         rows = Splatalogue.query_lines(min_freq * u.MHz, max_freq * u.MHz,
                                        chemical_name=self.full_name,

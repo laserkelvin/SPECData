@@ -24,12 +24,15 @@ def smooth(s_list, n):
     return s_smooth
 
 
-def peak_finder(s_freq_list, s_int_list, thres=0.3):
+def peak_finder(s_freq_list, s_int_list):
     """ Revised peak finding function.
         Wraps the peakutils functions for our purposes.
     """
     # Call peakutils function to get indexes of peaks
-    indexes = peakutils.indexes(s_int_list, thres=thres)
+    # Threshold is set to 5% of the strongest peak
+    thres = max(s_int_list) * 0.005
+    indexes = peakutils.indexes(s_int_list, thres=0.01)
+    print(indexes)
     # Slice arrays
     frequencies = s_freq_list[indexes]
     intensities = s_int_list[indexes]

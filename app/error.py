@@ -20,8 +20,9 @@ def is_valid_file(file_path):
         return False
 
     # Determine if file extention is correct
-    valid_ext = "sp", "lines", "cat", "dpt", "txt", "list", "ftb"
-    if str.split(str(file_path), '.')[1] not in valid_ext:
+    valid_ext = ["sp", "lines", "cat", "dpt", "txt", "list", "ftb"]
+    print(file_path.split(".")[-1])
+    if file_path.split(".")[-1] not in valid_ext:
         return False
 
     return True
