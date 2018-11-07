@@ -30,9 +30,12 @@ def peak_finder(s_freq_list, s_int_list):
     """
     # Call peakutils function to get indexes of peaks
     # Threshold is set to 5% of the strongest peak
-    thres = max(s_int_list) * 0.005
-    indexes = peakutils.indexes(s_int_list, thres=0.01)
-    print(indexes)
+    norm_int = s_int_list / max(s_int_list)
+    indexes = peakutils.indexes(norm_int, thres=0.01, min_dist=50)
+    # Take the top 500 peaks, or the length of the index
+    # array if it's less
+    nitems = min(500, len(indexes))
+    short_list = indexes.argsort()[-nitems:][::-1]
     # Slice arrays
     frequencies = s_freq_list[indexes]
     intensities = s_int_list[indexes]
